@@ -1,0 +1,271 @@
+@extends('layouts.pdfOfCulture')
+@section('title')
+    {{ __('Report') }}-#{{ $group['id'] }}-{{ date('Y-m-d') }}
+@endsection
+@section('content')
+    <style>
+        table {
+            width: 548.75pt;
+            border-collapse: collapse;
+            border: none;
+        }
+
+        td {
+            width: 134.9pt;
+            border: 1pt solid black;
+            padding: 0in 5.4pt;
+            vertical-align: top;
+
+        }
+
+        .patientInfo,
+        .results,
+        .sensitivityTable {
+            margin-bottom: 30px;
+        }
+
+        /* .doneBy {
+                margin-left: 50%;
+            } */
+
+        .sensitivityTable table tr td {
+            padding: 5px;
+        }
+
+        .printable .title {
+            text-align: center !important;
+            margin-bottom: 30px;
+            font-size: 30px
+        }
+
+        .header {
+            margin-bottom: 10px
+        }
+    </style>
+
+    <div class="printable">
+        @php
+            $count_categories = 0;
+        @endphp
+        @foreach ($categories as $category)
+            @if (count($category['cultures']))
+                @php
+                    $count_categories++;
+                    $count = 0;
+                @endphp
+                @if ($count_categories > 1)
+                    <pagebreak>
+                    </pagebreak>
+                @endif
+
+                {{-- <div class="header">
+            <img src="C:\Users\Administrator\Desktop\header.jpg" alt="header">
+        </div> --}}
+
+                <div class="title">
+                    RAPORT I EKZAMINIMIT MIKROBIOLOGJIK
+                </div>
+                {{-- <div class="patientInfo">
+            <table>
+                <tr>
+                    <td>
+                        Emri i pacientit
+                    </td>
+                    <td>
+                        Emri
+                    </td>
+                    <td>Barkodi</td>
+                    <td>Barkodi</td>
+                </tr>
+                <tr>
+                    <td>
+                        Kodi i pacientit
+                    </td>
+                    <td>
+                        Kodi
+                    </td>
+                    <td>Data e regjistrimit</td>
+                    <td>Data</td>
+                </tr>
+                <tr>
+                    <td>
+                        Mosha
+                    </td>
+                    <td>
+                        35 vjet
+                    </td>
+                    <td>Data e marrjes se mostres</td>
+                    <td>Data</td>
+                </tr>
+                <tr>
+                    <td>
+                        Gjinia
+                    </td>
+                    <td>
+                        F
+                    </td>
+                    <td>Data e validimit</td>
+                    <td>Data</td>
+                </tr>
+                <tr>
+                    <td>
+                        Adresa </td>
+                    <td>
+                        Pr
+                    </td>
+                    <td>Referuesi</td>
+                    <td>Dr</td>
+                </tr>
+            </table>
+        </div> --}}
+
+                @if (count($category['cultures']))
+                    @foreach ($category['cultures'] as $culture)
+                        @php
+                            $count++;
+                        @endphp
+                        @if ($count > 1)
+                            <pagebreak>
+                        @endif
+
+                        <div class="results">
+                            <table>
+                                <tr>
+                                    <td>
+                                        {{ __('Clinic Culture') }}
+                                    </td>
+                                    <td>
+                                        {{ $culture['culture']['sample_type'] }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        {{ __('Microbiology Examination') }}
+                                    </td>
+                                    <td>
+                                        {{ $culture['culture']['name'] }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        {{ __('Result') }}
+                                    </td>
+                                    <td>
+                                        {!! str_replace("\n", '<br />', $culture['comment']) !!}
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="sensitivityTable">
+                            <table>
+                                
+                                <tr>
+                                    <td>
+                                        {{ __('Antibiotics') }}
+                                    </td>
+                                    <td style ="width: 20%; text-align:center">
+                                        Ndjeshmeria
+                                    </td>
+                                </tr>
+
+
+
+                                @foreach ($culture['high_antibiotics'] as $antibiotic)
+                                    <tr>
+                                        <td>
+                                            {{ $antibiotic['antibiotic']['name'] }}
+                                        </td>
+                                        <td style ="width: 20%; text-align:center">
+                                            @if ($antibiotic['sensitivity'] === 'Rezistent')
+                                                R
+                                            @elseif($antibiotic['sensitivity'] === 'Sensitiv')
+                                                S
+                                            @elseif($antibiotic['sensitivity'] === 'Intermediar')
+                                                I
+                                            @else
+                                            @endif
+                                        </td>
+
+                                    </tr>
+                                @endforeach
+
+                                @foreach ($culture['moderate_antibiotics'] as $antibiotic)
+                                    <tr>
+                                        <td>
+                                            {{ $antibiotic['antibiotic']['name'] }}
+                                        </td>
+                                         <td style ="width: 20%; text-align:center">
+                                            @if ($antibiotic['sensitivity'] === 'Rezistent')
+                                                R
+                                            @elseif($antibiotic['sensitivity'] === 'Sensitiv')
+                                                S
+                                            @elseif($antibiotic['sensitivity'] === 'Intermediar')
+                                                I
+                                            @endif
+                                        </td>
+
+                                    </tr>
+                                @endforeach
+                                @foreach ($culture['resident_antibiotics'] as $antibiotic)
+                                    <tr>
+                                        <td>
+                                            {{ $antibiotic['antibiotic']['name'] }}
+                                        </td>
+                                         <td style ="width: 20%; text-align:center">
+                                            @if ($antibiotic['sensitivity'] === 'Rezistent')
+                                                R
+                                            @elseif($antibiotic['sensitivity'] === 'Sensitiv')
+                                                S
+                                            @elseif($antibiotic['sensitivity'] === 'Intermediar')
+                                                I
+                                            @endif
+                                        </td>
+
+
+                                    </tr>
+                                @endforeach
+
+                            </table>
+
+                        </div>
+                    @endforeach
+                @endif
+            @endif
+        @endforeach
+        {{-- <div class="results">
+            <table>
+                <tr>
+                    <td>
+                        Mostra klinike
+                    </td>
+                    <td>
+                        Strisho
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Ekzaminimi mikrobiologjik
+                    </td>
+                    <td>
+                        Strisho
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Rezultati
+                    </td>
+                    <td>
+                        Pas mbjelljes dhe inkubimit të mostres (strisho e vulves) në teren selektiv Sabouraund dextrose agar
+                        është izoluar..
+                </tr>
+            </table>
+        </div> --}}
+
+        {{-- <div class="doneBy">
+            Analizen e punoi:
+            <div class="signature">
+                Nenshkrimi
+            </div>
+        </div> --}}
+    </div>
+@endsection

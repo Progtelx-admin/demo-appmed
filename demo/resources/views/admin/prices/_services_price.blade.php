@@ -1,0 +1,1 @@
+<input type="number" name="" id="service_{{$service['id']}}" value="{{$service['price']}}" class="form-control service_price" service_id="{{$service['id']}}">
