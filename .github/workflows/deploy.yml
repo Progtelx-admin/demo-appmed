@@ -8,11 +8,11 @@ on:
         required: true
         type: string
       database_name:
-        description: 'Database name to create'
+        description: 'Database name to create (without prefix)'
         required: true
         type: string
       db_user:
-        description: 'Database user to create'
+        description: 'Database user to create (without prefix)'
         required: true
         type: string
       db_password:
@@ -40,17 +40,21 @@ jobs:
           curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
             "https://cpanel.app-med.com:2083/execute/SubDomain/addsubdomain?domain=${{ github.event.inputs.subdomain }}.app-med.com&rootdomain=app-med.com"
           
+          # Add 'appmed_' prefix to the database name and user
+          db_name="appmed_${{ github.event.inputs.database_name }}"
+          db_user="appmed_${{ github.event.inputs.db_user }}"
+
           # Create Database in cPanel
           curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
-            "https://cpanel.app-med.com:2083/execute/MySQL/create_database?name=${{ github.event.inputs.database_name }}"
+            "https://cpanel.app-med.com:2083/execute/MySQL/create_database?name=$db_name"
           
           # Create Database User in cPanel
           curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
-            "https://cpanel.app-med.com:2083/execute/MySQL/add_user?name=${{ github.event.inputs.db_user }}&password=${{ github.event.inputs.db_password }}"
+            "https://cpanel.app-med.com:2083/execute/MySQL/add_user?name=$db_user&password=${{ github.event.inputs.db_password }}"
           
           # Grant Database User Permissions
           curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
-            "https://cpanel.app-med.com:2083/execute/MySQL/add_user_to_database?user=${{ github.event.inputs.db_user }}&database=${{ github.event.inputs.database_name }}"
+            "https://cpanel.app-med.com:2083/execute/MySQL/add_user_to_database?user=$db_user&database=$db_name"
           
           # Create DNS Record in Cloudflare
           curl -X POST "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_records" \
