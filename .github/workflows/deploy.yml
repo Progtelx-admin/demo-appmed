@@ -39,19 +39,19 @@ jobs:
           # Create Subdomain in cPanel
           curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
             "https://cpanel.app-med.com:2083/execute/SubDomain/addsubdomain?domain=${{ github.event.inputs.subdomain }}.app-med.com&rootdomain=app-med.com"
-
+          
           # Create Database in cPanel
           curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
             "https://cpanel.app-med.com:2083/execute/MySQL/create_database?name=${{ github.event.inputs.database_name }}"
-
+          
           # Create Database User in cPanel
           curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
             "https://cpanel.app-med.com:2083/execute/MySQL/add_user?name=${{ github.event.inputs.db_user }}&password=${{ github.event.inputs.db_password }}"
-
+          
           # Grant Database User Permissions
           curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
             "https://cpanel.app-med.com:2083/execute/MySQL/add_user_to_database?user=${{ github.event.inputs.db_user }}&database=${{ github.event.inputs.database_name }}"
-
+          
           # Create DNS Record in Cloudflare
           curl -X POST "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_records" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
@@ -64,13 +64,17 @@ jobs:
 
       - name: Deploy Code to Subdomain
         run: |
-          ssh -o StrictHostKeyChecking=no your_user@89.58.46.66 << 'EOF'
+          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << 'EOF'
             # Create the subdomain directory
-            mkdir -p /home/your_user/public_html/${{ github.event.inputs.subdomain }}.app-med.com
+            mkdir -p /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com
+            
             # Navigate to the subdomain folder
-            cd /home/your_user/public_html/${{ github.event.inputs.subdomain }}.app-med.com
+            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com
+            
             # Pull the latest code from the repository
             git pull origin main
+            
             # Install/update dependencies and run migrations
-            php artisan migrate
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+            php artisan migrate --force
           EOF
