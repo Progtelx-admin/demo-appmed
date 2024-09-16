@@ -69,16 +69,19 @@ jobs:
       - name: Deploy Code to Subdomain
         run: |
           ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << 'EOF'
-            # Create the subdomain directory
+            set -e  # Exit on error
+            echo "Creating the subdomain directory..."
             mkdir -p /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com
             
-            # Navigate to the subdomain folder
-            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com
+            echo "Navigating to the subdomain folder..."
+            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com || { echo "Directory not found"; exit 1; }
             
-            # Pull the latest code from the repository
-            git pull origin main
+            echo "Pulling the latest code from the repository..."
+            git pull origin main || { echo "Git pull failed"; exit 1; }
             
-            # Install/update dependencies and run migrations
-            composer install --no-interaction --prefer-dist --optimize-autoloader
-            php artisan migrate --force
+            echo "Installing/updating Composer dependencies..."
+            composer install --no-interaction --prefer-dist --optimize-autoloader || { echo "Composer install failed"; exit 1; }
+            
+            echo "Running database migrations..."
+            php artisan migrate --force || { echo "Migrations failed"; exit 1; }
           EOF
