@@ -70,11 +70,18 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << 'EOF'
             set -e  # Exit on error
+
             echo "Creating the subdomain directory..."
             mkdir -p /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com
             
             echo "Navigating to the subdomain folder..."
             cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com || { echo "Directory not found"; exit 1; }
+
+            # Check if the directory is a Git repository
+            if [ ! -d ".git" ]; then
+              echo "Cloning repository..."
+              git clone <repository_url> . || { echo "Git clone failed"; exit 1; }
+            fi
             
             echo "Pulling the latest code from the repository..."
             git pull origin main || { echo "Git pull failed"; exit 1; }
