@@ -93,11 +93,11 @@ jobs:
             composer update --no-interaction --prefer-dist --optimize-autoloader || { echo "Composer update failed"; exit 1; }
           EOF
 
-      - name: Set up .env file
+      - name: Set up .env file 
         run: |
           ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
             cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
-            
+
             # Check if .env.example exists
             if [ ! -f .env.example ]; then
               echo ".env.example file not found!"
@@ -133,6 +133,9 @@ jobs:
             echo "MAIL_FROM_NAME=${{ secrets.MAIL_FROM_NAME }}" >> .env
             echo "PUSHER_APP_SECRET=${{ secrets.PUSHER_APP_SECRET }}" >> .env
             echo "PUSHER_APP_CLUSTER=${{ secrets.PUSHER_APP_CLUSTER }}" >> .env
+            
+            # Output the .env file contents (for debugging)
+            cat .env
           EOF
 
       - name: Generate application key
