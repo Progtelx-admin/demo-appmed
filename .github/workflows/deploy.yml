@@ -80,7 +80,7 @@ jobs:
             # Check if the directory is a Git repository
             if [ ! -d ".git" ]; then
               echo "Cloning repository..."
-              git clone <repository_url> . || { echo "Git clone failed"; exit 1; }
+              git clone https://github.com/Progtelx-admin/demo-appmed.git . || { echo "Git clone failed"; exit 1; }
             fi
             
             echo "Pulling the latest code from the repository..."
