@@ -34,6 +34,13 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 89.58.46.66 >> ~/.ssh/known_hosts
 
+      - name: Test SSH Connection
+        run: |
+          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
+            echo "SSH connection successful!"
+            ls -la /home/appmed/public_html/
+          EOF
+
       - name: Create Subdomain, Database, and User
         run: |
           # Create Subdomain in cPanel
@@ -99,10 +106,15 @@ jobs:
       - name: Set up .env file
         run: |
           ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
-            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
+            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo || { echo "Demo directory not found"; exit 1; }
 
             # Create .env file
-            cp .env.example .env
+            if [ -f ".env.example" ]; then
+              cp .env.example .env
+            else
+              echo ".env.example file not found!"
+              exit 1
+            fi
 
             # Add environment variables
             echo "APP_NAME=${{ secrets.APP_NAME }}" >> .env
@@ -124,6 +136,18 @@ jobs:
             echo "MAIL_FROM_NAME=${{ secrets.MAIL_FROM_NAME }}" >> .env
             echo "PUSHER_APP_SECRET=${{ secrets.PUSHER_APP_SECRET }}" >> .env
             echo "PUSHER_APP_CLUSTER=${{ secrets.PUSHER_APP_CLUSTER }}" >> .env
+          EOF
+
+      - name: Verify .env file creation
+        run: |
+          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
+            if [ -f /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo/.env ]; then
+              echo ".env file created successfully."
+              cat /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo/.env
+            else
+              echo ".env file not found!"
+              exit 1
+            fi
           EOF
 
       - name: Generate application key
