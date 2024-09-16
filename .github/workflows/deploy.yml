@@ -95,3 +95,53 @@ jobs:
             echo "Running database migrations..."
             php artisan migrate --force || { echo "Migrations failed"; exit 1; }
           EOF
+
+      - name: Set up .env file
+        run: |
+          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
+            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
+
+            # Create .env file
+            cp .env.example .env
+
+            # Add environment variables
+            echo "APP_NAME=${{ secrets.APP_NAME }}" >> .env
+            echo "APP_ENV=${{ secrets.APP_ENV }}" >> .env
+            echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
+            echo "APP_URL=https://${{ github.event.inputs.subdomain }}.app-med.com" >> .env
+            echo "DB_CONNECTION=${{ secrets.DB_CONNECTION }}" >> .env
+            echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+            echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+            echo "DB_DATABASE=appmed_${{ github.event.inputs.database_name }}" >> .env
+            echo "DB_USERNAME=appmed_${{ github.event.inputs.db_user }}" >> .env
+            echo "DB_PASSWORD=${{ github.event.inputs.db_password }}" >> .env
+            echo "MAIL_MAILER=${{ secrets.MAIL_MAILER }}" >> .env
+            echo "MAIL_HOST=${{ secrets.MAIL_HOST }}" >> .env
+            echo "MAIL_PORT=${{ secrets.MAIL_PORT }}" >> .env
+            echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
+            echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
+            echo "MAIL_ENCRYPTION=${{ secrets.MAIL_ENCRYPTION }}" >> .env
+            echo "MAIL_FROM_NAME=${{ secrets.MAIL_FROM_NAME }}" >> .env
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+            echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}" >> .env
+            echo "AWS_BUCKET=${{ secrets.AWS_BUCKET }}" >> .env
+            echo "PUSHER_APP_ID=${{ secrets.PUSHER_APP_ID }}" >> .env
+            echo "PUSHER_APP_KEY=${{ secrets.PUSHER_APP_KEY }}" >> .env
+            echo "PUSHER_APP_SECRET=${{ secrets.PUSHER_APP_SECRET }}" >> .env
+            echo "PUSHER_APP_CLUSTER=${{ secrets.PUSHER_APP_CLUSTER }}" >> .env
+          EOF
+
+      - name: Generate application key
+        run: |
+          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
+            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
+            php artisan key:generate
+          EOF
+
+      - name: Run migrations
+        run: |
+          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
+            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
+            php artisan migrate --force
+          EOF
