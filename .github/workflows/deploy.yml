@@ -66,6 +66,33 @@ jobs:
           CPANEL_USERNAME: ${{ secrets.CPANEL_USERNAME }}
           CPANEL_PASSWORD: ${{ secrets.CPANEL_PASSWORD }}
 
+      - name: Deploy Code to Subdomain
+        run: |
+          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << 'EOF'
+            set -e  # Exit on error
+
+            echo "Creating the subdomain directory..."
+            mkdir -p /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com
+            
+            echo "Navigating to the subdomain folder..."
+            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com || { echo "Directory not found"; exit 1; }
+
+            # Check if the directory is a Git repository
+            if [ ! -d ".git" ]; then
+              echo "Cloning repository..."
+              git clone https://github.com/Progtelx-admin/demo-appmed.git . || { echo "Git clone failed"; exit 1; }
+            fi
+            
+            echo "Pulling the latest code from the repository..."
+            git pull origin main || { echo "Git pull failed"; exit 1; }
+            
+            echo "Navigating to the demo directory..."
+            cd demo || { echo "Demo directory not found"; exit 1; }
+
+            echo "Installing/updating Composer dependencies..."
+            composer update --no-interaction --prefer-dist --optimize-autoloader || { echo "Composer update failed"; exit 1; }
+          EOF
+
       - name: Set up .env file (ensure correct env vars)
         run: |
           ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
@@ -105,41 +132,6 @@ jobs:
             cat .env
           EOF
 
-      - name: Clear Laravel Config Cache (before Composer update)
-        run: |
-          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
-            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
-            php artisan config:clear
-            php artisan cache:clear
-          EOF
-
-      - name: Deploy Code to Subdomain
-        run: |
-          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << 'EOF'
-            set -e  # Exit on error
-
-            echo "Creating the subdomain directory..."
-            mkdir -p /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com
-            
-            echo "Navigating to the subdomain folder..."
-            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com || { echo "Directory not found"; exit 1; }
-
-            # Check if the directory is a Git repository
-            if [ ! -d ".git" ]; then
-              echo "Cloning repository..."
-              git clone https://github.com/Progtelx-admin/demo-appmed.git . || { echo "Git clone failed"; exit 1; }
-            fi
-            
-            echo "Pulling the latest code from the repository..."
-            git pull origin main || { echo "Git pull failed"; exit 1; }
-            
-            echo "Navigating to the demo directory..."
-            cd demo || { echo "Demo directory not found"; exit 1; }
-
-            echo "Installing/updating Composer dependencies..."
-            composer update --no-interaction --prefer-dist --optimize-autoloader || { echo "Composer update failed"; exit 1; }
-          EOF
-          
       - name: Generate application key
         run: |
           ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
@@ -153,3 +145,4 @@ jobs:
             cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
             php artisan migrate --force
           EOF
+
