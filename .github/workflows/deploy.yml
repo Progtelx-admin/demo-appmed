@@ -130,7 +130,10 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << 'EOF'
             cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
-            composer install --no-interaction --prefer-dist --optimize-autoloader || { echo "Composer install failed"; exit 1; }
+            # Run composer update to update the lock file
+            composer update --ignore-platform-reqs || { echo "Composer update failed"; exit 1; }
+            # Install dependencies
+            composer install --ignore-platform-reqs || { echo "Composer install failed"; exit 1; }
           EOF
 
       - name: Run migrations and clear cache
