@@ -37,30 +37,35 @@ jobs:
       - name: Create Subdomain, Database, and User
         run: |
           # Create Subdomain in cPanel
-          curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
-            "https://cpanel.app-med.com:2083/execute/SubDomain/addsubdomain?domain=${{ github.event.inputs.subdomain }}.app-med.com&rootdomain=app-med.com"
+          response=$(curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
+            "https://cpanel.app-med.com:2083/execute/SubDomain/addsubdomain?domain=${{ github.event.inputs.subdomain }}.app-med.com&rootdomain=app-med.com")
+          echo "Subdomain creation response: $response"
           
           # Add 'appmed_' prefix to the database name and user
           db_name="appmed_${{ github.event.inputs.database_name }}"
           db_user="appmed_${{ github.event.inputs.db_user }}"
 
           # Create Database in cPanel
-          curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
-            "https://cpanel.app-med.com:2083/execute/MySQL/create_database?name=$db_name"
+          response=$(curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
+            "https://cpanel.app-med.com:2083/execute/MySQL/create_database?name=$db_name")
+          echo "Database creation response: $response"
           
           # Create Database User in cPanel
-          curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
-            "https://cpanel.app-med.com:2083/execute/MySQL/add_user?name=$db_user&password=${{ github.event.inputs.db_password }}"
+          response=$(curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
+            "https://cpanel.app-med.com:2083/execute/MySQL/add_user?name=$db_user&password=${{ github.event.inputs.db_password }}")
+          echo "Database user creation response: $response"
 
           # Grant Database User Permissions
-          curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
-            "https://cpanel.app-med.com:2083/execute/MySQL/add_user_to_database?user=$db_user&database=$db_name"
+          response=$(curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
+            "https://cpanel.app-med.com:2083/execute/MySQL/add_user_to_database?user=$db_user&database=$db_name")
+          echo "Grant user permissions response: $response"
           
           # Create DNS Record in Cloudflare
-          curl -X POST "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_records" \
+          response=$(curl -X POST "https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/dns_records" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            --data '{"type":"A","name":"${{ github.event.inputs.subdomain }}.app-med.com","content":"89.58.46.66","ttl":3600}'
+            --data '{"type":"A","name":"${{ github.event.inputs.subdomain }}.app-med.com","content":"89.58.46.66","ttl":3600}')
+          echo "DNS record creation response: $response"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CPANEL_USERNAME: ${{ secrets.CPANEL_USERNAME }}
@@ -106,9 +111,9 @@ jobs:
             sed -i "s/APP_ENV=.*/APP_ENV=${{ secrets.APP_ENV }}/" .env
             sed -i "s/APP_KEY=.*/APP_KEY=${{ secrets.APP_KEY }}/" .env
             sed -i "s/APP_URL=.*/APP_URL=https:\/\/${{ github.event.inputs.subdomain }}.app-med.com/" .env
-            sed -i "s/DB_CONNECTION=.*/DB_CONNECTION=${{ secrets.DB_CONNECTION }}/" .env
-            sed -i "s/DB_HOST=.*/DB_HOST=${{ secrets.DB_HOST }}/" .env
-            sed -i "s/DB_PORT=.*/DB_PORT=${{ secrets.DB_PORT }}/" .env
+            sed -i "s/DB_CONNECTION=.*/DB_CONNECTION=mysql/" .env
+            sed -i "s/DB_HOST=.*/DB_HOST=127.0.0.1/" .env
+            sed -i "s/DB_PORT=.*/DB_PORT=3306/" .env
             sed -i "s/DB_DATABASE=.*/DB_DATABASE=appmed_${{ github.event.inputs.database_name }}/" .env
             sed -i "s/DB_USERNAME=.*/DB_USERNAME=appmed_${{ github.event.inputs.db_user }}/" .env
             sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${{ github.event.inputs.db_password }}/" .env
