@@ -95,7 +95,7 @@ jobs:
 
       - name: Set up .env file (before Composer install)
         run: |
-          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
+          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << 'EOF'
             cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
 
             # Check if .env.example exists
@@ -141,7 +141,7 @@ jobs:
 
       - name: Run migrations and clear cache
         run: |
-          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
+          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << 'EOF'
             cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
             php artisan config:clear
             php artisan cache:clear
