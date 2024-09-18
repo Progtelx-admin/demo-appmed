@@ -51,7 +51,7 @@ jobs:
           # Create Database User in cPanel
           curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
             "https://cpanel.app-med.com:2083/execute/MySQL/add_user?name=$db_user&password=${{ github.event.inputs.db_password }}"
-          
+
           # Grant Database User Permissions
           curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
             "https://cpanel.app-med.com:2083/execute/MySQL/add_user_to_database?user=$db_user&database=$db_name"
@@ -93,7 +93,7 @@ jobs:
             composer update --no-interaction --prefer-dist --optimize-autoloader || { echo "Composer update failed"; exit 1; }
           EOF
 
-      - name: Set up .env file (ensure correct env vars)
+      - name: Set up .env file
         run: |
           ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
             cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
@@ -132,17 +132,12 @@ jobs:
             cat .env
           EOF
 
-      - name: Generate application key
+      - name: Run migrations and clear cache
         run: |
           ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
             cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan migrate --force
             php artisan key:generate
           EOF
-
-      - name: Run migrations
-        run: |
-          ssh -o StrictHostKeyChecking=no appmed@89.58.46.66 << EOF
-            cd /home/appmed/public_html/${{ github.event.inputs.subdomain }}.app-med.com/demo
-            php artisan migrate --force
-          EOF
-
