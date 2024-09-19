@@ -532,8 +532,8 @@ if (! function_exists('setting')) {
         ABXzM:abort(404);
         goto UikyL;
         icm0E:$response = json_decode($server_output, true);
-        goto D8tko;
-        UhHrC:$setting = json_decode($setting['value'], true);
+        // goto D8tko;
+        // UhHrC:$setting = json_decode($setting['value'], true);
         goto GxAZS;
         X73No:$purchase_code = \File::get(base_path('storage/purchase_code'));
         goto ibSnI;
