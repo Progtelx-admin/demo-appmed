@@ -64,7 +64,7 @@ jobs:
           response=$(curl -X POST "https://api.cloudflare.com/client/v4/zones/5e2f9a11d2929865695166f04832b0e1/dns_records" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            --data '{"type":"A","name":"${{ github.event.inputs.subdomain }}.app-med.com","content":"89.58.46.66","ttl":"1","proxied": "true" }')
+            --data '{"type":"A","name":"${{ github.event.inputs.subdomain }}.app-med.com","content":"89.58.46.66","ttl":1,"proxied":true}'
 
           # Check if the request was successful
             if [[ $(echo "$response" | jq -r '.success') == "true" ]]; then
