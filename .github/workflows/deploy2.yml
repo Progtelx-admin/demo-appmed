@@ -1,4 +1,4 @@
-name: Deploy to Subdomain
+name: 2 Deploy to Subdomain
 
 on:
   workflow_dispatch:
