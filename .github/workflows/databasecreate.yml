@@ -27,23 +27,23 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 89.58.46.66 >> ~/.ssh/known_hosts
 
-      - name: Create Database and User in cPanel
+      - name: Create Database and User in cPanel (Using UAPI)
         run: |
           # Add 'appmed_' prefix to the database name and user
           db_name="appmed_${{ github.event.inputs.database_name }}"
           db_user="appmed_${{ github.event.inputs.db_user }}"
 
-          # Create Database in cPanel
+          # Create Database in cPanel using UAPI
           response=$(curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
-            "https://cpanel.app-med.com:2083/execute/MySQL/create_database?name=$db_name")
+            "https://cpanel.app-med.com:2083/execute/Mysql/create_database?name=$db_name")
           echo "Database creation response: $response"
 
-          # Create Database User in cPanel
+          # Create Database User in cPanel using UAPI
           response=$(curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
-            "https://cpanel.app-med.com:2083/execute/MySQL/add_user?name=$db_user&password=${{ github.event.inputs.db_password }}")
+            "https://cpanel.app-med.com:2083/execute/Mysql/create_user?name=$db_user&password=${{ github.event.inputs.db_password }}")
           echo "Database user creation response: $response"
 
-          # Grant Database User Permissions
+          # Grant Database User Permissions using UAPI
           response=$(curl -u ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_PASSWORD }} \
-            "https://cpanel.app-med.com:2083/execute/MySQL/add_user_to_database?user=$db_user&database=$db_name")
+            "https://cpanel.app-med.com:2083/execute/Mysql/set_privileges_on_database?user=$db_user&database=$db_name&privileges=ALL")
           echo "Grant user permissions response: $response"
